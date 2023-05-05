@@ -8,7 +8,7 @@ import json  # work with the return from the website
 from time import sleep  # sleep
 
 
-ser = Service(r"C:\Users\mahgo\Downloads\edgedriver_win64 (1)\msedgedriver.exe")
+ser = Service(Driver_location)
 op = webdriver.EdgeOptions()
 op.add_argument('headless')
 op.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -49,13 +49,13 @@ def get_data():
 
     param = [{"sectionId": "4965"}, {"sectionId": "5120"}, {"sectionId": "5014"}, {"sectionId": "5034"}]  # hard code course id's
     s = requests.Session()
-    sleep(2)
+    sleep(2)  # wait for cookies to load in
     cookies = driver.get_cookies()
     set_cookies(s, cookies)
     outputs = []
     for section in param:
         resp = s.post(grade_link, data=json.dumps(section), headers=head)
-        if resp.status_code == 200:
+        if resp.status_code == 200:  # accepted
             resp = resp.json()
         else:
             return "Error"
@@ -116,18 +116,14 @@ def print_output(data):
     print("-------------------------------------------")
 
 
-
-enterUsername(USERNAME)
-enterPassword(PASSWORD)
-jsons = get_data()
-if jsons == "Error":
-    print("Error")
-    exit(404)
-for json_data in jsons:
-    processed = process(json_data['data'])
-    json_data['data'] = processed
-for json_data in jsons:
-    print_output(json_data)
-# x = driver.get_cookies()
-# for i in x:
-#     print(i)
+def main():
+    enterUsername(USERNAME)
+    enterPassword(PASSWORD)
+    jsons = get_data()
+    if jsons == "Error":
+        return "Error"
+    for json_data in jsons:
+        processed = process(json_data['data'])
+        json_data['data'] = processed
+        print_output(json_data)
+main()
