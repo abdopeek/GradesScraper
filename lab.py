@@ -100,6 +100,8 @@ def process(data):
 
 
 def print_output(data):
+    total_score = 0
+    highest_score = 0
     name = data['name']
     scores = data['data']
     assignments = scores['finalTermAssignments']
@@ -108,10 +110,13 @@ def print_output(data):
         print(f"{assignment['description']}")
         for sub_assignment in assignment['studentAssignments']:
             if sub_assignment['isEarned']:
+                total_score += float(sub_assignment['earnedPoints'])
+                higest_score += float(sub_assignment['possiblePoints'])
                 print(f"\t{sub_assignment['title']}\t\t{sub_assignment['earnedPoints']}/{sub_assignment['possiblePoints']}")
             else:
                 print(f"\t{sub_assignment['title']}\t\tNot earned yet/{sub_assignment['possiblePoints']}")
-    print(f"Final Score: {scores['finalscore']}")
+    percentage = total_score / highest_score * 100
+    print(f"Final Score: {total_score:.2f}/{highest_score:.2f} | %{percentage:.2f}")
     print("-------------------------------------------")
     print("-------------------------------------------")
 
