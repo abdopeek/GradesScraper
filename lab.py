@@ -1,5 +1,5 @@
-from selenium import webdriver  # use it to open the acc browser
-from selenium.webdriver.edge.service import Service  # some bug idfk
+from selenium import webdriver  # use it to open the actual browser for cookies
+from selenium.webdriver.edge.service import Service  
 from selenium.webdriver.common.keys import Keys  # to use a keyboard
 from selenium.webdriver.common.by import By  # to locate element
 import requests  # to work with requests instead of selenium
@@ -49,7 +49,7 @@ def get_data():
 
     param = [{"sectionId": "4965"}, {"sectionId": "5120"}, {"sectionId": "5014"}, {"sectionId": "5034"}]  # hard code course id's
     s = requests.Session()
-    sleep(2)  # wait for cookies to load in
+    sleep(1.5)  # wait for cookies to load in
     cookies = driver.get_cookies()
     set_cookies(s, cookies)
     outputs = []
@@ -111,7 +111,7 @@ def print_output(data):
         for sub_assignment in assignment['studentAssignments']:
             if sub_assignment['isEarned']:
                 total_score += float(sub_assignment['earnedPoints'])
-                higest_score += float(sub_assignment['possiblePoints'])
+                highest_score += float(sub_assignment['possiblePoints'])
                 print(f"\t{sub_assignment['title']}\t\t{sub_assignment['earnedPoints']}/{sub_assignment['possiblePoints']}")
             else:
                 print(f"\t{sub_assignment['title']}\t\tNot earned yet/{sub_assignment['possiblePoints']}")
