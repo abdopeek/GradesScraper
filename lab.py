@@ -4,6 +4,9 @@ from utils import *
 from selenium import webdriver  # use it to open the actual browser for cookies
 from selenium.webdriver.edge.service import Service
 from selenium.webdriver.common.keys import Keys  # to use a keyboard
+from selenium.webdriver.support.ui import WebDriverWait  # wait till site loads
+from selenium.webdriver.support import expected_conditions as EC  # if conditions for selenium
+from selenium.common.exceptions import NoSuchElementException, TimeoutException  # exceptions
 from selenium.webdriver.common.by import By  # to locate element
 import requests  # to work with requests instead of selenium
 import json  # work with the return from the website
@@ -12,8 +15,10 @@ from time import sleep  # sleep
 ser = Service(DRIVER_LOCATION)
 op = webdriver.EdgeOptions()
 op.add_argument('headless')
-op.add_experimental_option('excludeSwitches', ['enable-logging'])
-# op.add_experimental_option('detach', True)
+op.add_argument('--log-level=3')
+op.add_argument('--log-path=path/to/edge.log')
+# op.add_experimental_option('excludeSwitches', ['enable-logging'])
+op.add_experimental_option('detach', True)
 driver = webdriver.Edge(service=ser, options=op)
 driver.minimize_window()
 driver.get("https://upeisis.uofcanada.edu.eg/PowerCampusSelfService/Registration/Schedule")
@@ -33,7 +38,16 @@ def set_cookies(cookies, header):
 
 
 def enterUsername(username):
-    search = driver.find_element(By.XPATH, '//*[@id="txtUserName"]')
+    try:
+        search = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="txtUserName"]'))
+        )
+    except NoSuchElementException:
+        print("Element not found, exiting")
+        driver.quit()
+    except TimeoutException:
+        print("Time out")
+        driver.quit()
     search.send_keys(username)
     search.send_keys(Keys.RETURN)
 
@@ -63,7 +77,7 @@ def get_student_id():
 def get_sections(id):
     sections = []
     url = r'https://upeisis.uofcanada.edu.eg/PowerCampusSelfService/Schedule/Student'
-    session = {"year": "2023", "term": "WINTER", "session": ""}  # update this every semester
+    session = {"year": "2023", "term": "FALL", "session": ""}  # update this every semester
     payload = {'personId': id, "yearTermSession": session}
     sleep(1.5)
     cookies = driver.get_cookies()
@@ -154,13 +168,29 @@ def print_output(data):
             if sub_assignment['isEarned']:
                 total_score += float(sub_assignment['earnedPoints'])
                 highest_score += float(sub_assignment['possiblePoints'])
-                print(f"\t{sub_assignment['title']}\t\t{sub_assignment['earnedPoints']}/{sub_assignment['possiblePoints']}")
+                print(f"\t{sub_assignment['title']}\t\t{sub_assignment['earnedPoints']}/{sub_assignment['possiblePoints']}"
+                      f" | %{(float(sub_assignment['earnedPoints'])/float(sub_assignment['possiblePoints'])) * 100:.2f}")
             else:
                 print(f"\t{sub_assignment['title']}\t\tNot earned yet/{sub_assignment['possiblePoints']}")
-    percentage = total_score / highest_score * 100
-    print(f"Final Score: {total_score:.2f}/{highest_score:.2f} | %{percentage:.2f}")
-    print("-------------------------------------------")
-    print("-------------------------------------------")
+    try:
+        lost = highest_score - total_score
+        print(f"Final Score: {total_score:.2f}/{highest_score:.2f} | %{lost:.2f} lost")
+        if lost < 9:
+            print("Best case scenario: A+")
+        elif 9 < lost < 15:
+            print("Best case scenario: A")
+        elif 15 < lost < 20:
+            print("Best case scenario: A-")
+        else:
+            print("Less than A")
+
+        print("-------------------------------------------")
+        print("-------------------------------------------")
+    except:
+        print(f"Final Score: {total_score:.2f}/{highest_score:.2f}")
+        print("-------------------------------------------")
+        print("-------------------------------------------")
+
 
 def main():
     username = input("Username: ")
